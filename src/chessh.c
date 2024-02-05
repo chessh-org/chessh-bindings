@@ -80,6 +80,19 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	case MAKE_MOVE:
 		event->type = CHESSH_EVENT_MOVE;
 		return get_move(connection, &event->move.move);
+	case INIT_GAME:
+		event->type = CHESSH_EVENT_FOUND_OP;
+		switch (fgetc(connection->file)) {
+		case -1:
+			return -1;
+		case 0:
+			event->found_op.player = CHESSH_WHITE;
+			return 0;
+		default:
+			event->found_op.player = CHESSH_BLACK;
+			return 0;
+		}
+		return -1;
 	}
 	return 0;
 }
@@ -141,6 +154,7 @@ static int send_string(CHESSH const * const endpoint, char const * const string)
  *
  * @param endpoint The endpoint to get a move from
  * @param ret The return location of the move
+ * @return 0 on success, -1 on failure
  */
 static int get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	int c1 = fgetc(endpoint->file);
