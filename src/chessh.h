@@ -16,7 +16,7 @@ typedef enum {
 
 typedef enum {
 	CHESSH_WHITE,
-	CHESSH_BLACK
+	CHESSH_BLACK,
 } chessh_player;
 
 typedef struct {
@@ -39,8 +39,21 @@ typedef chessh_piece chessh_board[8][8];
 typedef enum {
 	CHESSH_EVENT_MOVE,
 	CHESSH_EVENT_FOUND_OP,
-	CHESSH_EVENT_UNKNOWN
+	CHESSH_EVENT_NOTIFY,
+	CHESSH_EVENT_UNKNOWN,
 } chessh_event_type;
+
+typedef enum {
+	CHESSH_NOTIFY_DRAW_OFFER,
+	CHESSH_NOTIFY_WHITE_WINS,
+	CHESSH_NOTIFY_BLACK_WINS,
+	CHESSH_NOTIFY_FORCED_DRAW,
+	CHESSH_NOTIFY_INTERNAL_SERVER_ERROR,
+	CHESSH_NOTIFY_YOUR_TURN,
+	CHESSH_NOTIFY_ILLEGAL_MOVE,
+	CHESSH_NOTIFY_NEEDS_PROMOTION,
+	CHESSH_NOTIFY_LAST,
+} chessh_notification;
 
 typedef struct {
 	chessh_event_type type; /* always CHESSH_EVENT_MOVE */
@@ -52,10 +65,16 @@ typedef struct {
 	chessh_player player;   /* Set to the player you're playing as, not against. */
 } chessh_event_found_op;
 
+typedef struct {
+	chessh_event_type type; /* Always CHESSH_EVENT_NOTIFY */
+	chessh_notification event;
+} chessh_event_notify;
+
 typedef union {
 	chessh_event_type type;
 	chessh_event_move move;
 	chessh_event_found_op found_op;
+	chessh_event_notify notify;
 } chessh_event;
 
 typedef struct {

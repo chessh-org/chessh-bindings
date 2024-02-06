@@ -20,15 +20,6 @@
 #define MOVE_INFO 0x06
 #define NOTIFY 0x07
 
-#define draw_offer 0x00
-#define white_wins 0x01
-#define black_wins 0x02
-#define forced_draw 0x03
-#define internal_server_error 0x04
-#define your_turn 0x05
-#define illegal_move 0x06
-#define needs_promotion 0x07
-
 static int create_socket(char const * const host, int const port);
 static int send_string(CHESSH const * const endpoint, char const * const string);
 static int get_move(CHESSH const * const endpoint, chessh_move *ret);
@@ -69,6 +60,7 @@ void chessh_disconnect(CHESSH *connection) {
 
 int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	int type;
+	int c;
 	type = fgetc(connection->file);
 	if (type == EOF) {
 		return -1;
@@ -83,7 +75,7 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	case INIT_GAME:
 		event->type = CHESSH_EVENT_FOUND_OP;
 		switch (fgetc(connection->file)) {
-		case -1:
+		case EOF:
 			return -1;
 		case 0:
 			event->found_op.player = CHESSH_WHITE;
@@ -93,6 +85,14 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 			return 0;
 		}
 		return -1;
+	case NOTIFY:
+		event->type = CHESSH_EVENT_NOTIFY;
+		c = fgetc(connection->file);
+		if (c == EOF || c < 0 || c >= CHESSH_NOTIFY_LAST) {
+			return -1;
+		}
+		event->notify.event = c;
+		return 0;
 	}
 	return 0;
 }
