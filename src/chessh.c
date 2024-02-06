@@ -117,9 +117,13 @@ int chessh_make_move(CHESSH const * const endpoint, chessh_move *move) {
 	return 0;
 }
 
-/* TODO: Implement me */
-int chessh_request_board(CHESSH const * const endpoint);
-int chessh_request_moves(CHESSH const * const endpoint);
+int chessh_request_board(CHESSH const * const endpoint) {
+	return fputc(GET_BOARD, endpoint->file) == EOF ? -1 : 0;
+}
+
+int chessh_request_moves(CHESSH const * const endpoint) {
+	return fputc(GET_VALID_MOVES, endpoint->file) == EOF ? -1 : 0;
+}
 
 /*! @brief Creates a new client socket
  *
