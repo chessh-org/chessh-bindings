@@ -106,8 +106,18 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	return -1;
 }
 
+int chessh_make_move(CHESSH const * const endpoint, chessh_move *move) {
+	int c1, c2;
+	c1 = (move->r_i << 5) | (move->c_i << 2) | (move->has_promotion << 1);
+	c2 = (move->r_f << 5) | (move->c_f << 2) | (move->promotion);
+	if (fputc(c1, endpoint->file) == EOF ||
+	    fputc(c2, endpoint->file) == EOF) {
+		return -1;
+	}
+	return 0;
+}
+
 /* TODO: Implement me */
-int chessh_make_move(CHESSH const * const endpoint, chessh_move *move);
 int chessh_request_board(CHESSH const * const endpoint);
 int chessh_request_moves(CHESSH const * const endpoint);
 
