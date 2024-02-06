@@ -23,6 +23,8 @@
 static int create_socket(char const * const host, int const port);
 static int send_string(CHESSH const * const endpoint, char const * const string);
 static int get_move(CHESSH const * const endpoint, chessh_move *ret);
+static int get_board(CHESSH const * const endpoint, chessh_board *ret);
+static int get_two_pieces(CHESSH const * const endpoint, chessh_board *ret, int r, int c);
 
 CHESSH *chessh_connect(char const * const host, int const port,
 		char const * const user, char const * const pass) {
@@ -93,9 +95,10 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 		}
 		event->notify.event = c;
 		return 0;
-	/* TODO: Implement me */
 	case BOARD_INFO:
-		return 0;
+		event->type = CHESSH_EVENT_BOARD_INFO;
+		return get_board(connection, &event->board.board);
+	/* TODO: Implement me */
 	case MOVE_INFO:
 		return 0;
 	}
@@ -174,5 +177,46 @@ static int get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	ret->r_f = (c2 >> 5) & 7;
 	ret->c_f = (c2 >> 2) & 7;
 	ret->promotion = c2 & 3;
+	return 0;
+}
+
+/*! @brief Gets a board from an endpoint
+ *
+ * @param endpoint The endpoint to get a board from
+ * @param ret The return location of the board
+ * @return 0 on success, -1 on failure */
+static int get_board(CHESSH const * const endpoint, chessh_board *ret) {
+	int code;
+	for (int i = 0; i < 8; ++i) {
+		for (int j = 0; j < 8; j += 2) {
+			if ((code = get_two_pieces(endpoint, ret, i, j)) != 0) {
+				return code;
+			}
+		}
+	}
+	return 0;
+}
+
+/*! @brief Gets two pieces from a single byte of an endpoint
+ *
+ * @param endpoint The endpoint to get two pieces from
+ * @param ret The board to write those two pieces two
+ * @param r The row that the two pieces lie on
+ * @param c The column that the first of the two pieces lie on
+ * @return 0 on success, -1 on failure
+ */
+static int get_two_pieces(CHESSH const * const endpoint, chessh_board *ret, int r, int c) {
+	int ch;
+	if (r < 0 || r >= 8 || c < 0 || c >= 7) {
+		return -1;
+	}
+	ch = fgetc(endpoint->file);
+	if (ch == EOF || ch < 0 || ch > 0xff) {
+		return -1;
+	}
+	(*ret)[r][c].player   = (ch >> 7 ) & 1;
+	(*ret)[r][c].piece    = (ch >> 4 ) & 7;
+	(*ret)[r][c+1].player = (ch >> 3 ) & 1;
+	(*ret)[r][c+1].piece  = (ch >> 0 ) & 7;
 	return 0;
 }

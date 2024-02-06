@@ -40,6 +40,7 @@ typedef enum {
 	CHESSH_EVENT_MOVE,
 	CHESSH_EVENT_FOUND_OP,
 	CHESSH_EVENT_NOTIFY,
+	CHESSH_EVENT_BOARD_INFO,
 	CHESSH_EVENT_UNKNOWN,
 } chessh_event_type;
 
@@ -70,11 +71,17 @@ typedef struct {
 	chessh_notification event;
 } chessh_event_notify;
 
+typedef struct {
+	chessh_event_type type; /* Always CHESSH_EVENT_BOARD_INFO */
+	chessh_board board;
+} chessh_event_board_info;
+
 typedef union {
 	chessh_event_type type;
 	chessh_event_move move;
 	chessh_event_found_op found_op;
 	chessh_event_notify notify;
+	chessh_event_board_info board;
 } chessh_event;
 
 typedef struct {
