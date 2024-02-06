@@ -106,6 +106,11 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	return -1;
 }
 
+/* TODO: Implement me */
+int chessh_make_move(CHESSH const * const endpoint, chessh_move *move);
+int chessh_request_board(CHESSH const * const endpoint);
+int chessh_request_moves(CHESSH const * const endpoint);
+
 /*! @brief Creates a new client socket
  *
  * @param host The hostname of the server to connect to

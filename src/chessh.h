@@ -133,4 +133,30 @@ int chessh_wait(CHESSH *connection, chessh_event * const event);
  */
 int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret);
 
+/*! @brief Makes a chess move
+ *
+ * @param endpoint The endpoint to make a move on
+ * @param move The move to make
+ * @return 0 on success, -1 on failure
+ */
+int chessh_make_move(CHESSH const * const endpoint, chessh_move *move);
+
+/*! @brief Requests the server to get the current board
+ *
+ * @param endpoint The endpoint to request a board for
+ * @return 0 on success, -1 on failure
+ */
+int chessh_request_board(CHESSH const * const endpoint);
+
+/*! @brief Requests the server to get the current valid moves
+ *
+ * @param endpoint The endpoint to request moves on
+ * @return 0 on success, -1 on failure
+ */
+int chessh_request_moves(CHESSH const * const endpoint);
+
+static inline chessh_player chessh_get_player(CHESSH const * const endpoint) {
+	return endpoint->player;
+}
+
 #endif
