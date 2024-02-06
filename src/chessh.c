@@ -22,9 +22,9 @@
 
 static int create_socket(char const * const host, int const port);
 static int send_string(CHESSH const * const endpoint, char const * const string);
-static int get_move(CHESSH const * const endpoint, chessh_move *ret);
 static int get_board(CHESSH const * const endpoint, chessh_board *ret);
 static int get_two_pieces(CHESSH const * const endpoint, chessh_board *ret, int r, int c);
+static long get_word(CHESSH const * const endpoint);
 
 CHESSH *chessh_connect(char const * const host, int const port,
 		char const * const user, char const * const pass) {
@@ -73,7 +73,7 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 		return -1;
 	case MAKE_MOVE:
 		event->type = CHESSH_EVENT_MOVE;
-		return get_move(connection, &event->move.move);
+		return chessh_get_move(connection, &event->move.move);
 	case INIT_GAME:
 		event->type = CHESSH_EVENT_FOUND_OP;
 		switch (fgetc(connection->file)) {
@@ -98,11 +98,12 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	case BOARD_INFO:
 		event->type = CHESSH_EVENT_BOARD_INFO;
 		return get_board(connection, &event->board.board);
-	/* TODO: Implement me */
 	case MOVE_INFO:
-		return 0;
+		event->type = CHESSH_EVENT_MOVE_INFO;
+		event->move_info.move_count = get_word(connection);
+		return event->move_info.move_count < 0 ? -1 : 0;
 	}
-	return 0;
+	return -1;
 }
 
 /*! @brief Creates a new client socket
@@ -157,14 +158,7 @@ static int send_string(CHESSH const * const endpoint, char const * const string)
 	memcpy(buff+1, string, len);
 	return fwrite((void *) buff, len+1, 1, endpoint->file) < 1 ? -1:0;
 }
-
-/*! @brief Parses a move from an endpoint
- *
- * @param endpoint The endpoint to get a move from
- * @param ret The return location of the move
- * @return 0 on success, -1 on failure
- */
-static int get_move(CHESSH const * const endpoint, chessh_move *ret) {
+int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	int c1 = fgetc(endpoint->file);
 	int c2 = fgetc(endpoint->file);
 	if (c1 == EOF || c2 == EOF || c1 > 0xff || c2 > 0xff) {
@@ -219,4 +213,18 @@ static int get_two_pieces(CHESSH const * const endpoint, chessh_board *ret, int 
 	(*ret)[r][c+1].player = (ch >> 3 ) & 1;
 	(*ret)[r][c+1].piece  = (ch >> 0 ) & 7;
 	return 0;
+}
+
+/*! @brief Gets a 2 byte word from a chessh endpoint
+ *
+ * @param endpoint The endpoint to get a word from
+ * @return The word on success, or -1 on failure */
+static long get_word(CHESSH const * const endpoint) {
+	int c1, c2;
+	c1 = fgetc(endpoint->file);
+	c2 = fgetc(endpoint->file);
+	if (c1 == EOF || c2 == EOF || c1 < 0 || c2 < 0 || c1 > 0xff || c2 > 0xff) {
+		return -1;
+	}
+	return (long) c1 << 8 | c2;
 }

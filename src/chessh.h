@@ -41,6 +41,7 @@ typedef enum {
 	CHESSH_EVENT_FOUND_OP,
 	CHESSH_EVENT_NOTIFY,
 	CHESSH_EVENT_BOARD_INFO,
+	CHESSH_EVENT_MOVE_INFO,
 	CHESSH_EVENT_UNKNOWN,
 } chessh_event_type;
 
@@ -76,12 +77,19 @@ typedef struct {
 	chessh_board board;
 } chessh_event_board_info;
 
+/* XXX: You need to call chessh_get_move to actually get the moves. */
+typedef struct {
+	chessh_event_type type; /* Always CHESSH_EVENT_MOVE_INFO */
+	long move_count;
+} chessh_event_move_info;
+
 typedef union {
 	chessh_event_type type;
 	chessh_event_move move;
 	chessh_event_found_op found_op;
 	chessh_event_notify notify;
 	chessh_event_board_info board;
+	chessh_event_move_info move_info;
 } chessh_event;
 
 typedef struct {
@@ -116,5 +124,13 @@ void chessh_disconnect(CHESSH *connection);
  * @return 0 on success, -1 on error
  */
 int chessh_wait(CHESSH *connection, chessh_event * const event);
+
+/*! @brief Parses a move from an endpoint
+ *
+ * @param endpoint The endpoint to get a move from
+ * @param ret The return location of the move
+ * @return 0 on success, -1 on failure
+ */
+int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret);
 
 #endif
