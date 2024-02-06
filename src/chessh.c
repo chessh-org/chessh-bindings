@@ -93,6 +93,11 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 		}
 		event->notify.event = c;
 		return 0;
+	/* TODO: Implement me */
+	case BOARD_INFO:
+		return 0;
+	case MOVE_INFO:
+		return 0;
 	}
 	return 0;
 }
