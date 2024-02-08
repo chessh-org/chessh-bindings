@@ -19,15 +19,19 @@
 #define BOARD_INFO 0x05
 #define MOVE_INFO 0x06
 #define NOTIFY 0x07
+#define REGISTER 0x08
+#define AUTH_RESPONSE 0x09
 
 static int create_socket(char const * const host, int const port);
 static int send_string(CHESSH const * const endpoint, char const * const string);
 static int get_board(CHESSH const * const endpoint, chessh_board *ret);
 static int get_two_pieces(CHESSH const * const endpoint, chessh_board *ret, int r, int c);
 static long get_word(CHESSH const * const endpoint);
+static int chessh_auth(CHESSH const * const endpoint, unsigned char cmd,
+		char const * const user, char const * const pass);
+static int get_string(CHESSH const * const endpoint, char *ret);
 
-CHESSH *chessh_connect(char const * const host, int const port,
-		char const * const user, char const * const pass) {
+CHESSH *chessh_connect(char const * const host, int const port) {
 	CHESSH *ret;
 	if ((ret = malloc(sizeof *ret)) == NULL) {
 		goto error1;
@@ -39,20 +43,21 @@ CHESSH *chessh_connect(char const * const host, int const port,
 		goto error3;
 	}
 
-	if (send_string(ret, user) < 0 ||
-	    send_string(ret, pass)) {
-		goto error4;
-	}
-
 	return ret;
-error4:
-	fclose(ret->file);
 error3:
 	close(ret->fd);
 error2:
 	free(ret);
 error1:
 	return NULL;
+}
+
+int chessh_login(CHESSH *endpoint, char const * const user, char const * const pass) {
+	return chessh_auth(endpoint, LOGIN, user, pass);
+}
+
+int chessh_register(CHESSH *endpoint, char const * const user, char const * const pass) {
+	return chessh_auth(endpoint, REGISTER, user, pass);
 }
 
 void chessh_disconnect(CHESSH *connection) {
@@ -69,7 +74,11 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	}
 	switch (type) {
 	/* None of these commands should ever get sent TO the client */
-	case LOGIN: case GET_BOARD: case GET_VALID_MOVES: default:
+	case LOGIN: case GET_BOARD: case GET_VALID_MOVES: case REGISTER: default:
+		do {
+			putchar(type);
+			type = fgetc(connection->file);
+		} while (type != EOF);
 		return -1;
 	case MAKE_MOVE:
 		event->type = CHESSH_EVENT_MOVE;
@@ -102,6 +111,13 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 		event->type = CHESSH_EVENT_MOVE_INFO;
 		event->move_info.move_count = get_word(connection);
 		return event->move_info.move_count < 0 ? -1 : 0;
+	case AUTH_RESPONSE:
+		event->type = CHESSH_EVENT_AUTH_RESPONSE;
+		event->auth_response.code = fgetc(connection->file);
+		if (get_string(connection, event->auth_response.elaboration)) {
+			return -1;
+		}
+		return 0;
 	}
 	return -1;
 }
@@ -246,4 +262,41 @@ static long get_word(CHESSH const * const endpoint) {
 		return -1;
 	}
 	return (long) c1 << 8 | c2;
+}
+
+/*! @brief Sends an initial request (either login or register)
+ *
+ * @param endpoint The endpoint to send login information to
+ * @param cmd The command associated with that login information
+ * @param user The username of the login
+ * @param pass The password of the login
+ */
+static int chessh_auth(CHESSH const * const endpoint, unsigned char cmd,
+		char const * const user, char const * const pass) {
+	if (fputc(cmd, endpoint->file) == EOF) {
+		return -1;
+	}
+	if (send_string(endpoint, user) ||
+	    send_string(endpoint, pass)) {
+		return -1;
+	}
+	return 0;
+}
+
+/*! @brief Gets a string from an endpoint
+ * 
+ * @param endpoint The endpoint ot get a string from
+ * @param ret The location to store the string. `ret` must be at least 256 bytes
+ * large.
+ */
+static int get_string(CHESSH const * const endpoint, char *ret) {
+	int len;
+	len = fgetc(endpoint->file);
+	if (len < 0x00 || len > 0xff) {
+		return -1;
+	}
+	if (fread(ret, len, 1, endpoint->file) < 1) {
+		return -1;
+	}
+	return 0;
 }

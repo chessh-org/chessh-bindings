@@ -42,6 +42,7 @@ typedef enum {
 	CHESSH_EVENT_NOTIFY,
 	CHESSH_EVENT_BOARD_INFO,
 	CHESSH_EVENT_MOVE_INFO,
+	CHESSH_EVENT_AUTH_RESPONSE,
 	CHESSH_EVENT_UNKNOWN,
 } chessh_event_type;
 
@@ -56,6 +57,13 @@ typedef enum {
 	CHESSH_NOTIFY_NEEDS_PROMOTION,
 	CHESSH_NOTIFY_LAST,
 } chessh_notification;
+
+typedef enum {
+	CHESSH_REGISTRATION_SUCCESSFUL = 0x00,
+	CHESSH_REGISTRATION_FAILED = 0x01,
+	CHESSH_AUTHENTICATION_SUCCESSFUL = 0x80,
+	CHESSH_AUTHENTICATION_FAILED = 0x81,
+} chessh_auth_response_code;
 
 typedef struct {
 	chessh_event_type type; /* always CHESSH_EVENT_MOVE */
@@ -83,6 +91,12 @@ typedef struct {
 	long move_count;
 } chessh_event_move_info;
 
+typedef struct {
+	chessh_event_type type; /* Always CHESSH_EVENT_AUTH_RESPONSE */
+	chessh_auth_response_code code;
+	char elaboration[256];
+} chessh_event_auth_response;
+
 typedef union {
 	chessh_event_type type;
 	chessh_event_move move;
@@ -90,6 +104,7 @@ typedef union {
 	chessh_event_notify notify;
 	chessh_event_board_info board;
 	chessh_event_move_info move_info;
+	chessh_event_auth_response auth_response;
 } chessh_event;
 
 typedef struct {
@@ -102,13 +117,27 @@ typedef struct {
  * 
  * @param host The hostname of the API endpoint
  * @param port The port of the API endpoint
- * @param user The user to log in as
- * @param pass The password of said user
  * @see chessh_disconnect
  * @return The chessh connection object
  */
-CHESSH *chessh_connect(char const * const host, int const port,
-		char const * const user, char const * const pass);
+CHESSH *chessh_connect(char const * const host, int const port);
+
+/*! @brief Logs in to a chessh API endpoint
+ * 
+ * @param endpoint The endpoint to log in to
+ * @param user The user to log in as
+ * @param pass The password of that user
+ */
+int chessh_login(CHESSH *endpoint, char const * const user, char const * const pass);
+
+/*! @brief Registers a new user with a chessh API endpoint
+ * 
+ * @param endpoint The endpoint to log in to
+ * @param user The username to register
+ * @param pass The password of that user
+ * @see chessh_login
+ */
+int chessh_register(CHESSH *endpoint, char const * const user, char const * const pass);
 
 /*! @brief Disconnects from and frees a chessh API endpoint
  *
