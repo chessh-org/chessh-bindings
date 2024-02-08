@@ -5,6 +5,6 @@ RUN apt-get install -y build-essential
 
 COPY . /chessh-bindings
 
-RUN make -B /chessh-bindings
+RUN make -C /chessh-bindings -B
 RUN mv /chessh-bindings/src/chessh.h /usr/include/chessh.h && \
-    mv /chessh-bindings/build/chessh.a /usr/lib/chessh.a
+    mv /chessh-bindings/build/libchessh.a /usr/lib/libchessh.a

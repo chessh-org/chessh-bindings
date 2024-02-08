@@ -1,4 +1,4 @@
-OUT = build/chessh.a
+OUT = build/libchessh.a
 SRC = $(wildcard src/*.c)
 OBJ = $(subst src/,work/,$(subst .c,.o,$(SRC)))
 LDFLAGS =
