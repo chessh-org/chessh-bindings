@@ -127,6 +127,8 @@ CHESSH *chessh_connect(char const * const host, int const port);
  * @param endpoint The endpoint to log in to
  * @param user The user to log in as
  * @param pass The password of that user
+ * @return 0 on success, -1 on failure
+ * @see chessh_register
  */
 int chessh_login(CHESSH *endpoint, char const * const user, char const * const pass);
 
@@ -135,6 +137,7 @@ int chessh_login(CHESSH *endpoint, char const * const user, char const * const p
  * @param endpoint The endpoint to log in to
  * @param user The username to register
  * @param pass The password of that user
+ * @return 0 on success, -1 on failure
  * @see chessh_login
  */
 int chessh_register(CHESSH *endpoint, char const * const user, char const * const pass);
