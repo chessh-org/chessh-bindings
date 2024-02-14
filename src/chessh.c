@@ -75,10 +75,6 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 	switch (type) {
 	/* None of these commands should ever get sent TO the client */
 	case LOGIN: case GET_BOARD: case GET_VALID_MOVES: case REGISTER: default:
-		do {
-			putchar(type);
-			type = fgetc(connection->file);
-		} while (type != EOF);
 		return -1;
 	case MAKE_MOVE:
 		event->type = CHESSH_EVENT_MOVE;
@@ -89,10 +85,10 @@ int chessh_wait(CHESSH *connection, chessh_event * const event) {
 		case EOF:
 			return -1;
 		case 0:
-			event->found_op.player = CHESSH_WHITE;
+			event->found_op.player = connection->player = CHESSH_WHITE;
 			return 0;
 		default:
-			event->found_op.player = CHESSH_BLACK;
+			event->found_op.player = connection->player = CHESSH_BLACK;
 			return 0;
 		}
 		return -1;
