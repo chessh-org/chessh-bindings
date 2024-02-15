@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef enum {
 	CHESSH_ROOK,
@@ -190,5 +191,11 @@ int chessh_request_moves(CHESSH const * const endpoint);
 static inline chessh_player chessh_get_player(CHESSH const * const endpoint) {
 	return endpoint->player;
 }
+
+/*! @brief Checks if a chessh endpoint has an event in the queue
+ *
+ * @param endpoint The endpoint to request moves on
+ * @return true if there is an event, false if there isn't. */
+bool chessh_has_event(CHESSH const * const endpoint);
 
 #endif

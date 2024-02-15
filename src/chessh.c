@@ -1,3 +1,6 @@
+#include "chessh.h"
+
+#include "chessh.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +11,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-
-#include "chessh.h"
 
 #define LOGIN 0x00
 #define MAKE_MOVE 0x01
@@ -61,7 +62,7 @@ int chessh_register(CHESSH *endpoint, char const * const user, char const * cons
 }
 
 void chessh_disconnect(CHESSH *connection) {
-	close(connection->fd);
+	fclose(connection->file);
 	free(connection);
 }
 
@@ -189,6 +190,7 @@ static int send_string(CHESSH const * const endpoint, char const * const string)
 	memcpy(buff+1, string, len);
 	return fwrite((void *) buff, len+1, 1, endpoint->file) < 1 ? -1:0;
 }
+
 int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	int c1 = fgetc(endpoint->file);
 	int c2 = fgetc(endpoint->file);
@@ -203,6 +205,14 @@ int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	ret->c_f = (c2 >> 2) & 7;
 	ret->promotion = c2 & 3;
 	return 0;
+}
+
+bool chessh_has_event(CHESSH const * const endpoint) {
+	struct pollfd pollfd;
+	pollfd.fd = endpoint->fd;
+	pollfd.events = POLLIN;
+	poll(&pollfd, 1, 0);
+	return !!(pollfd.revents & POLLIN);
 }
 
 /*! @brief Gets a board from an endpoint
