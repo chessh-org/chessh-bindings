@@ -123,7 +123,8 @@ int chessh_make_move(CHESSH const * const endpoint, chessh_move *move) {
 	int c1, c2;
 	c1 = (move->r_i << 5) | (move->c_i << 2) | (move->has_promotion << 1);
 	c2 = (move->r_f << 5) | (move->c_f << 2) | (move->promotion);
-	if (fputc(c1, endpoint->file) == EOF ||
+	if (fputc(MAKE_MOVE, endpoint->file) == EOF ||
+	    fputc(c1, endpoint->file) == EOF ||
 	    fputc(c2, endpoint->file) == EOF) {
 		return -1;
 	}
@@ -211,7 +212,7 @@ bool chessh_has_event(CHESSH const * const endpoint) {
 	struct pollfd pollfd;
 	pollfd.fd = endpoint->fd;
 	pollfd.events = POLLIN;
-	poll(&pollfd, 1, 0);
+	poll(&pollfd, 1, 100);
 	return !!(pollfd.revents & POLLIN);
 }
 
