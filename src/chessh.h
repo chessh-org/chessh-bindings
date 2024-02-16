@@ -195,7 +195,9 @@ static inline chessh_player chessh_get_player(CHESSH const * const endpoint) {
 /*! @brief Checks if a chessh endpoint has an event in the queue
  *
  * @param endpoint The endpoint to request moves on
+ * @param timeout The time to wait for an event if there isn't one yet in
+ * milliseconds
  * @return true if there is an event, false if there isn't. */
-bool chessh_has_event(CHESSH const * const endpoint);
+bool chessh_has_event(CHESSH const * const endpoint, int timeout);
 
 #endif

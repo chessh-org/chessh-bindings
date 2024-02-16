@@ -208,11 +208,11 @@ int chessh_get_move(CHESSH const * const endpoint, chessh_move *ret) {
 	return 0;
 }
 
-bool chessh_has_event(CHESSH const * const endpoint) {
+bool chessh_has_event(CHESSH const * const endpoint, int timeout) {
 	struct pollfd pollfd;
 	pollfd.fd = endpoint->fd;
 	pollfd.events = POLLIN;
-	poll(&pollfd, 1, 100);
+	poll(&pollfd, 1, timeout);
 	return !!(pollfd.revents & POLLIN);
 }
 
